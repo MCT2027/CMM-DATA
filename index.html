@@ -819,7 +819,7 @@ function setP(k){st.p=k;st.mi=0;Object.keys(tv).forEach(x=>delete tv[x]);documen
 $('h1').textContent='Data CMM';document.title='Data CMM';
 setGen();
 $('cg').innerHTML=DATA.CH.map((c,i)=>`<div class="card${c.s.length>=6?' big':''}${/Ø/.test(c.t)?' hole':''}" style="--n:${c.s.length}"><h2 class="hb"><span>${c.t}</span><button class="vb" data-i="${i}" title="Chuyển biểu đồ / dữ liệu">▤</button></h2><div class="cv"><canvas id="ch${i}"></canvas></div><div class="tb" style="display:none"></div></div>`).join('');render();ust()}
-$('note').textContent=ALL.note;
+$('note').textContent=ALL.note+' · Phiên bản trang: V09-18/11 (có Plate, tự đẩy GitHub, spec thu hẹp 0.03)';
 matchMedia('(prefers-color-scheme:dark)').onchange=render;
 let rw=innerWidth,rt;addEventListener('resize',()=>{if(innerWidth===rw)return;rw=innerWidth;clearTimeout(rt);rt=setTimeout(()=>{if(st.v!='data')render()},150)});
 const dz={x:0,y:0,s:1,f:1,ptr:new Map(),d0:0};
