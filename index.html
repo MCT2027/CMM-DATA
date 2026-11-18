@@ -392,6 +392,11 @@ main{padding:6px 14px 12px}
 <div class="fr" style="margin:6px 0;align-items:center"><button id="dwu">🖼 Tải bản vẽ lên</button><span class="sub">Ảnh JPG/PNG — mỗi mã hàng (Mirror/Normal) một bản vẽ, đang chọn mã nào thì lưu cho mã đó</span></div><input type="file" id="dwf" accept="image/*" style="display:none"><input type="file" id="fsdi" webkitdirectory multiple style="display:none"><input type="file" id="uf" accept=".xlsm,.xlsx,.xls,.xlsb,.csv,.txt,.tsv" multiple=""><div id="us"></div><button id="udel" style="color:var(--ng);font-weight:600" title="Xóa toàn bộ dữ liệu (cả dữ liệu gốc và dữ liệu đã cập nhật) để nạp lại từ đầu">🗑 Xóa toàn bộ dữ liệu</button>
 <div class="fr" style="margin:8px 0 2px;align-items:center"><button id="ush" class="on" style="" title="Mở menu chia sẻ của điện thoại, chọn Zalo">📤 Gửi Zalo</button><button id="ux" title="Tải file HTML đã chứa dữ liệu mới về máy">⬇ Tải file về</button><span class="sub" id="uxs">Đang tạo file…</span></div>
 <div class="fr" id="fsw" style="margin: 8px 0px; align-items: center;"><button id="fsb">📁 Đổi thư mục</button><button id="fsr" style="">🔄 Quét ngay</button><button id="fsx" style="">✕ Bỏ kết nối</button><button id="fsbell" style="" title="Cho phép Edge hiện thông báo khi có dữ liệu mới">🔔 Bật thông báo</button><span class="sub" id="fsn">Chưa kết nối thư mục — tự quét khi mở trang và mỗi 5 phút (file sửa trong 14 ngày gần nhất).</span></div>
+<details id="gh"><summary>☁ Tự đẩy dữ liệu lên GitHub (dùng cho máy ở xưởng)</summary><div class="upb">
+<div class="fr" style="margin:6px 0;align-items:center;flex-wrap:wrap;gap:8px"><label>Repo <input id="gh_r" size="22"></label><label>Nhánh <input id="gh_b" size="6"></label><label>Token <input id="gh_t" type="password" size="26" autocomplete="off"></label><label style="flex-direction:row;align-items:center;gap:4px"><input type="checkbox" id="gh_a"> Tự đẩy khi có dữ liệu mới</label><button id="gh_s">Lưu &amp; thử kết nối</button><button id="gh_p">⬆ Đẩy ngay</button></div>
+<div class="sub" id="gh_n"></div>
+<div class="sub" style="margin-top:4px">Chỉ bật ở <b>một</b> máy duy nhất (máy xưởng): máy đó quét thư mục chung (5 phút/lần), có dữ liệu mới thì ghi file <code>data.json</code> lên GitHub; mọi máy khác mở trang qua link GitHub Pages sẽ tự nhận dữ liệu. Token chỉ lưu trong trình duyệt của máy này, <b>không nằm trong file HTML</b>.</div>
+</div></details>
 <details id="ed"><summary>✎ Chỉnh sửa dữ liệu (nếu up sai)</summary><div id="edb"></div></details></div></details>
 </main>
 <div id="dwo" class=""><div class="dh"><b id="dwt"></b><button id="dz_u" title="Tải / thay bản vẽ">⬆</button><button id="dz_o" title="Thu nhỏ">−</button><button id="dz_i" title="Phóng to">+</button><button id="dz_f" title="Vừa khung">⤢</button><button id="dz_x" title="Đóng (Esc)">✕</button></div><div id="dwv"><img id="dwi" alt="Bản vẽ"></div></div>
@@ -865,4 +870,41 @@ fsInit();
 </script>
 
 
+<script>
+/* ===== Đồng bộ dữ liệu qua GitHub: máy xưởng đẩy data.json, máy khác tự nhận ===== */
+(function(){
+const LS='j1pa_gh',cfg=()=>{try{return JSON.parse(localStorage.getItem(LS)||'{}')}catch(e){return{}}},save=o=>{try{localStorage.setItem(LS,JSON.stringify(o));return 1}catch(e){return 0}};
+const msg=(x,bad)=>{const n=$('gh_n');if(n){n.textContent=x;n.className='sub'+(bad?' ng':'')}};
+const hs=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return h+':'+s.length};
+const total=()=>Object.values(ALL.P).reduce((n,q)=>n+q.S.length,0);
+const b64=s=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(String(fr.result).split(',')[1]);fr.readAsDataURL(new Blob([s],{type:'application/json'}))});
+async function push(force){const c=cfg();if(!c.tok||!c.repo)throw new Error('chưa nhập repo / token');
+const P={};for(const k in ALL.P){const q=ALL.P[k];P[k]={S:q.S,del:q.del||[]}}
+const sig=hs(JSON.stringify(P)),n=total();if(!force&&c.sig===sig)return null;
+if(!force&&c.n&&n<c.n*.5)throw new Error('dữ liệu giảm mạnh ('+c.n+' → '+n+' mẫu) nên không tự đẩy — nếu đúng ý, bấm “⬆ Đẩy ngay”');
+if(force&&c.n&&n<c.n*.5&&!confirm('Dữ liệu giảm mạnh ('+c.n+' → '+n+' mẫu). Vẫn ghi đè dữ liệu trên GitHub?'))throw new Error('đã hủy');
+const content=await b64(JSON.stringify({ver:ALL.ver,built:Date.now(),P})),url='https://api.github.com/repos/'+c.repo+'/contents/data.json',br=c.br||'main',H={Authorization:'Bearer '+c.tok,Accept:'application/vnd.github+json'};
+for(let a=0;a<2;a++){let sha;const g=await fetch(url+'?ref='+encodeURIComponent(br)+'&t='+Date.now(),{headers:H,cache:'no-store'});
+if(g.ok)sha=(await g.json()).sha;else if(g.status!=404)throw new Error('GitHub '+g.status+(g.status==401?' — token sai hoặc hết hạn':g.status==403?' — token thiếu quyền':''));
+const r=await fetch(url,{method:'PUT',headers:{...H,'Content-Type':'application/json'},body:JSON.stringify({message:'Cap nhat du lieu '+new Date().toLocaleString('vi-VN'),content,branch:br,...(sha?{sha}:{})})});
+if(r.ok){const c2=cfg();c2.sig=sig;c2.n=n;c2.at=Date.now();save(c2);return 'đã đẩy '+n+' mẫu'}
+if(r.status!=409&&r.status!=422)throw new Error('GitHub '+r.status+(r.status==404?' — sai tên repo hoặc token không có quyền Contents (Read and write)':''))}
+throw new Error('xung đột khi ghi, sẽ thử lại sau')}
+let busy=0;async function auto(){const c=cfg();if(!c.auto||!c.tok||busy)return;busy=1;try{const m=await push(0);if(m)msg('☁ '+new Date().toLocaleTimeString('vi-VN')+' · '+m)}catch(e){msg('✗ '+new Date().toLocaleTimeString('vi-VN')+' · '+e.message,1)}busy=0}
+window.ghAuto=auto;setInterval(auto,60000);
+async function pull(){if(!/^https?:/.test(location.protocol))return;try{const r=await fetch('data.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const j=await r.json();if(!j||!j.P)return;let add=0,rem=0;
+for(const k in j.P){const R=j.P[k],P=ALL.P[k];if(!P||!R||!Array.isArray(R.S))continue;const dl=new Set([...(P.del||[]),...(R.del||[])]),have=new Set(P.S.map(sk));
+R.S.forEach(s=>{const q=sk(s);if(!have.has(q)&&!dl.has(q)){have.add(q);P.S.push(s);add++}});
+if((R.del||[]).length){const rd=new Set(R.del),n=P.S.length;P.S=P.S.filter(s=>!rd.has(sk(s)));rem+=n-P.S.length}
+fixAll(P);P.S.sort(sdate);P.min=P.S.length?P.S[0][0]:'';P.max=P.S.length?P.S[P.S.length-1][0]:''}
+if(add||rem){const keep={mc:st.mc,ca:st.ca,mo:st.mo,wk:st.wk,dy:st.dy,v:st.v};setP(st.p);Object.assign(st,keep);render();try{toast(['☁ Đã nhận dữ liệu mới từ GitHub ('+add+' mẫu mới)'])}catch(e){}}}catch(e){}}
+window.ghPull=pull;setTimeout(pull,800);setInterval(pull,600000);
+function ui(){const c=cfg();$('gh_r').value=c.repo||'MCT2027/CMM-DATA';$('gh_b').value=c.br||'main';$('gh_a').checked=!!c.auto;$('gh_t').placeholder=c.tok?'(đã lưu — để trống nếu giữ nguyên)':'github_pat_…';if(c.at)msg('Lần đẩy gần nhất: '+new Date(c.at).toLocaleString('vi-VN')+(c.auto?' · đang tự đẩy':''))}
+$('gh_s').onclick=async()=>{const c=cfg();c.repo=$('gh_r').value.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\.git$/,'').replace(/\/+$/,'');c.br=$('gh_b').value.trim()||'main';const tk=$('gh_t').value.trim();if(tk)c.tok=tk;c.auto=$('gh_a').checked;
+if(!save(c)){msg('✗ không lưu được trên trình duyệt này',1);return}$('gh_t').value='';ui();if(!c.tok){msg('Chưa nhập token',1);return}msg('Đang thử kết nối…');
+try{const r=await fetch('https://api.github.com/repos/'+c.repo,{headers:{Authorization:'Bearer '+c.tok}});if(!r.ok)throw new Error('GitHub '+r.status+' — kiểm tra tên repo và token');const j=await r.json();if(j.permissions&&j.permissions.push===false)throw new Error('token không có quyền ghi');msg('✓ Kết nối được '+j.full_name+(c.auto?' · tự đẩy: BẬT':' · tự đẩy: tắt')+'. Bấm “⬆ Đẩy ngay” để đẩy lần đầu.')}catch(e){msg('✗ '+e.message,1)}};
+$('gh_a').onchange=()=>{const c=cfg();c.auto=$('gh_a').checked;save(c)};
+$('gh_p').onclick=async()=>{msg('Đang đẩy…');try{msg('☁ '+new Date().toLocaleTimeString('vi-VN')+' · '+await push(1))}catch(e){msg('✗ '+e.message,1)}};
+ui()})();
+</script>
 </body></html>
