@@ -776,7 +776,7 @@ if(NC){gset(updShort()+'<div class="ln"><a href="#" id="ncx">Chi tiết ▾</a><
 gset(updLine()+'<div class="ln">Dữ liệu từ '+dm(DATA.min)+' · bản dựng '+ALL.gen+' · <a href="#" id="ncc">Thu gọn ▴</a></div>')}
 
 /* ===== Tự lấy dữ liệu từ thư mục chung (Chrome/Edge máy tính) ===== */
-const FSA=!!window.showDirectoryPicker&&(()=>{try{return window.self===window.top}catch(e){return false}})(),INF=(()=>{try{return window.self!==window.top}catch(e){return true}})(),FS_DAYS=14,FS_DEP=5,OLD=new Set();let FSL=[],FSB=0;const FS_MAX=4,fsEsc=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const FSA=!!window.showDirectoryPicker&&(()=>{try{return window.self===window.top}catch(e){return false}})(),INF=(()=>{try{return window.self!==window.top}catch(e){return true}})(),FS_DAYS=14,FS_DEP=5,OLD=new Set();let FSL=[],FSB=0;const FS_MAX=10,fsEsc=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const idb=(m,k,v)=>new Promise((ok,no)=>{const r=indexedDB.open('j1pafs',1);r.onupgradeneeded=()=>r.result.createObjectStore('h');r.onerror=()=>no(r.error);r.onsuccess=()=>{try{const o=r.result.transaction('h',m=='get'?'readonly':'readwrite').objectStore('h'),q=m=='get'?o.get(k):m=='set'?o.put(v,k):o.delete(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)}catch(e){no(e)}}});
 const fsDone=()=>{try{return JSON.parse(localStorage.getItem('j1pa_fs_done')||'{}')}catch(e){return{}}};
 async function fsList(h,path,dep,out){for await(const [nm,e] of h.entries()){if(e.kind=='file'){if(/\.(xlsm|xlsx|xls|xlsb|csv|txt|tsv)$/i.test(nm)&&!/^~\$/.test(nm))out.push({e,path:path+nm})}else if(dep<FS_DEP)await fsList(e,path+nm+'/',dep+1,out)}return out}
