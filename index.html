@@ -819,7 +819,7 @@ function setP(k){st.p=k;st.mi=0;Object.keys(tv).forEach(x=>delete tv[x]);documen
 $('h1').textContent='Data CMM';document.title='Data CMM';
 setGen();
 $('cg').innerHTML=DATA.CH.map((c,i)=>`<div class="card${c.s.length>=6?' big':''}${/Ø/.test(c.t)?' hole':''}" style="--n:${c.s.length}"><h2 class="hb"><span>${c.t}</span><button class="vb" data-i="${i}" title="Chuyển biểu đồ / dữ liệu">▤</button></h2><div class="cv"><canvas id="ch${i}"></canvas></div><div class="tb" style="display:none"></div></div>`).join('');render();ust()}
-$('note').textContent=ALL.note+' · Phiên bản trang: V11-19/11 (gom lý do file lỗi, bỏ qua file không thuộc mã hàng)';
+$('note').textContent=ALL.note+' · Phiên bản trang: V12-19/11 (tự đẩy tối đa 10 phút/lần, gom lý do file lỗi)';
 matchMedia('(prefers-color-scheme:dark)').onchange=render;
 let rw=innerWidth,rt;addEventListener('resize',()=>{if(innerWidth===rw)return;rw=innerWidth;clearTimeout(rt);rt=setTimeout(()=>{if(st.v!='data')render()},150)});
 const dz={x:0,y:0,s:1,f:1,ptr:new Map(),d0:0};
@@ -897,7 +897,7 @@ const r=await fetch(url,{method:'PUT',headers:{...H,'Content-Type':'application/
 if(r.ok){const c2=cfg();c2.sig=sig;c2.n=n;c2.at=Date.now();save(c2);return 'đã đẩy '+n+' mẫu'}
 if(r.status!=409&&r.status!=422)throw new Error('GitHub '+r.status+(r.status==404?' — sai tên repo hoặc token không có quyền Contents (Read and write)':''))}
 throw new Error('xung đột khi ghi, sẽ thử lại sau')}
-let busy=0;async function auto(){const c=cfg();if(!c.auto||!c.tok||busy)return;busy=1;try{const m=await push(0);if(m)msg('☁ '+new Date().toLocaleTimeString('vi-VN')+' · '+m)}catch(e){msg('✗ '+new Date().toLocaleTimeString('vi-VN')+' · '+e.message,1)}busy=0}
+let busy=0;async function auto(){const c=cfg();if(!c.auto||!c.tok||busy)return;if(c.at&&Date.now()-c.at<6e5)return;busy=1;try{const m=await push(0);if(m)msg('☁ '+new Date().toLocaleTimeString('vi-VN')+' · '+m)}catch(e){msg('✗ '+new Date().toLocaleTimeString('vi-VN')+' · '+e.message,1)}busy=0}
 window.ghAuto=auto;setInterval(auto,60000);
 async function pull(){if(!/^https?:/.test(location.protocol))return;try{const r=await fetch('data.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const j=await r.json();if(!j||!j.P)return;let add=0,rem=0;
 for(const k in j.P){const R=j.P[k],P=ALL.P[k];if(!P||!R||!Array.isArray(R.S))continue;const dl=new Set([...(P.del||[]),...(R.del||[])]),have=new Set(P.S.map(sk));
