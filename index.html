@@ -361,6 +361,22 @@ main{padding:6px 14px 12px}
 .hd3 #gen{display:flex!important;flex-direction:row!important;flex-wrap:wrap;gap:1px 14px!important;align-items:center}.hd3 .u .upl{margin:0!important}.hd3 #fst:empty{display:none!important}
 .cg .tb{max-height:calc(100vh - 300px)}
 }
+body.sc #upl{display:none!important}
+
+/* v13: đầu trang gọn — 4 khung model cân trên một hàng; “Máy vừa nhập” thu thành 1 dòng có mũi tên */
+#upl .umt{background:none;border:1px solid var(--bd);border-radius:999px;padding:1px 10px;font:inherit;color:var(--tx);cursor:pointer;white-space:nowrap}
+#upl .umt:hover{border-color:var(--ac)}
+#upl:not(.open) .ms{display:none!important}
+#upl .ul{display:none!important}
+@media(min-width:760px){
+.hd3{grid-template-columns:max-content minmax(0,1fr) minmax(220px,290px)!important}
+.hd3 .t{padding:6px 12px!important;flex-direction:column!important;align-items:flex-start!important;justify-content:center!important;gap:2px!important}
+.hd3 .t .dy{font-size:11px}
+.hd3 .ps{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important;align-content:center!important;padding:6px 8px!important}
+.hd3 .ps>.pr{min-width:0;overflow:hidden}
+.hd3 .u{padding:6px 12px!important;gap:3px!important}
+.hd3 .u .upl{flex-wrap:wrap!important}
+}
 </style>
 </head>
 <body class="fsc">
@@ -773,9 +789,10 @@ const cn={},lt={};P.S.forEach(s=>{cn[s[2]]=(cn[s[2]]||0)+1;lt[s[2]]=s});const ID
 const ms=Object.keys(m).sort((a,b)=>a.localeCompare(b,0,{numeric:true})),ng=ms.filter(x=>!m[x]),ok=ms.length-ng.length,on=k==st.p;
 return '<div class="pr'+(on?' on':'')+'" data-p="'+k+'" role="button" tabindex="0" aria-pressed="'+on+'" title="Xem '+lb+'"><span class="pn">'+lb+'<small>'+(ms.length?ms.length+' máy':'—')+'</small></span>'+
 (ms.length?'<span class="pbar" aria-hidden="true">'+(ok?'<i class="o" style="flex:'+ok+'"></i>':'')+(ng.length?'<i class="n" style="flex:'+ng.length+'"></i>':'')+'</span><span class="ct"><b class="ok">'+ok+'</b>OK<b'+(ng.length?' class="ng"':'')+'>'+ng.length+'</b>NG</span>'+(ng.length?'<span class="tg">Máy NG '+ng.map(x=>'<em data-m="'+x+'" role="button" tabindex="0" class="'+(on&&st.mc==x?'sel':'')+'" title="Bấm để xem máy '+x+' · NG từ mẫu '+dm(lt[x][0])+' '+cs(lt[x][1])+' — chưa đo lại OK">'+x+'</em>').join('')+'</span>':''):'<span class="no">'+(mk.length?'Không có máy hoạt động':'Không có dữ liệu')+'</span>')+idl+'</div>'}).join('')}
-function updMs(){const el=$('upl');if(!el)return;const a=uaGet(),L=a[0];if(!L){el.classList.remove('on');return}
+const UPL_MS=30*60*1000;/* thông báo “Máy vừa nhập” tự mất sau 30 phút */
+function updMs(){const el=$('upl');if(!el)return;const a=uaGet(),L=a[0];if(!L||Date.now()-L.t>UPL_MS){el.classList.remove('on');return}
 const nm=uaNg(L,a[1]?a[1].t:0),ks=Object.keys(L.mc).sort((x,y)=>(nm[y]?1:0)-(nm[x]?1:0)||x.localeCompare(y,0,{numeric:true})),sh=x=>x.replace(' máy ',' ');
-el.innerHTML='<span class="ul" title="Lần nhập '+uaTm(L.t)+'">Máy vừa nhập:</span>'+(ks.length?'<span class="ms">'+ks.map(k=>'<b class="'+(nm[k]?'ng':'ok')+'" data-pm="'+k+'" role="button" tabindex="0" style="cursor:pointer" title="Bấm để xem máy này">'+sh(k)+'</b>').join('')+'</span>':'<span>không có mẫu mới</span>');el.classList.add('on')}
+const nN=ks.filter(k=>nm[k]).length;el.innerHTML='<button type="button" class="umt" title="Lần nhập '+uaTm(L.t)+' — bấm để mở / đóng danh sách máy">'+(window.__uplOpen?'▾':'▸')+' Máy vừa nhập: <b>'+ks.length+'</b> máy'+(nN?' · <b class="ng">'+nN+' NG</b>':'')+'</button>'+(ks.length?'<span class="ms">'+ks.map(k=>'<b class="'+(nm[k]?'ng':'ok')+'" data-pm="'+k+'" role="button" tabindex="0" style="cursor:pointer" title="Bấm để xem máy này">'+sh(k)+'</b>').join('')+'</span>':'<span>không có mẫu mới</span>');el.classList.add('on');el.classList.toggle('open',!!window.__uplOpen)}
 function gset(h){const up=$('upl'),g=$('gen');if(up)g.parentNode.insertBefore(up,$('fst'));g.innerHTML=h;if(up)g.insertBefore(up,g.lastElementChild)}
 function setGen(){updMs();const mx=Math.max(...Object.values(ALL.P).map(p=>+p.max.replace(/-/g,''))),y=Math.floor(mx/1e4),m=Math.floor(mx/100)%100,d=mx%100,age=Math.floor((Date.now()-new Date(y,m-1,d).getTime())/864e5);
 const ws=age>=2,wn=ws?'<div class="ln w">Đã '+age+' ngày chưa có dữ liệu mới — hỏi người nhập file mới nhất trên Zalo</div>':'',hs='<div class="hs"><i class="dot'+(ws?' wn':'')+'"></i><span>Dữ liệu đến <b>'+dm(DATA.max)+'</b></span></div>';
@@ -819,7 +836,7 @@ function setP(k){st.p=k;st.mi=0;Object.keys(tv).forEach(x=>delete tv[x]);documen
 $('h1').textContent='Data CMM';document.title='Data CMM';
 setGen();
 $('cg').innerHTML=DATA.CH.map((c,i)=>`<div class="card${c.s.length>=6?' big':''}${/Ø/.test(c.t)?' hole':''}" style="--n:${c.s.length}"><h2 class="hb"><span>${c.t}</span><button class="vb" data-i="${i}" title="Chuyển biểu đồ / dữ liệu">▤</button></h2><div class="cv"><canvas id="ch${i}"></canvas></div><div class="tb" style="display:none"></div></div>`).join('');render();ust()}
-$('note').textContent=ALL.note+' · Phiên bản trang: V12-19/11 (tự đẩy tối đa 10 phút/lần, gom lý do file lỗi)';
+$('note').textContent=ALL.note+' · Phiên bản trang: V14-19/11 (đầu trang gọn: 4 khung model 1 hàng, máy vừa nhập thu gọn có mũi tên)';
 matchMedia('(prefers-color-scheme:dark)').onchange=render;
 let rw=innerWidth,rt;addEventListener('resize',()=>{if(innerWidth===rw)return;rw=innerWidth;clearTimeout(rt);rt=setTimeout(()=>{if(st.v!='data')render()},150)});
 const dz={x:0,y:0,s:1,f:1,ptr:new Map(),d0:0};
@@ -914,4 +931,6 @@ $('gh_a').onchange=()=>{const c=cfg();c.auto=$('gh_a').checked;save(c)};
 $('gh_p').onclick=async()=>{msg('Đang đẩy…');try{msg('☁ '+new Date().toLocaleTimeString('vi-VN')+' · '+await push(1))}catch(e){msg('✗ '+e.message,1)}};
 ui()})();
 </script>
+<script>(function(){const f=()=>document.body.classList.toggle('sc',scrollY>80);addEventListener('scroll',f,{passive:true});f();setInterval(()=>{try{updMs()}catch(e){}},60000)})();</script>
+<script>document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#upl .umt');if(!b)return;window.__uplOpen=!window.__uplOpen;try{updMs()}catch(x){}});</script>
 </body></html>
