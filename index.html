@@ -633,10 +633,10 @@ const HOLE={'Kích thước Ø5.6':[5.65,5.75],'Kích thước Ø6':[6.05,6.15]}
 function fixHole(P){Object.keys(HOLE).forEach(t=>{const g=P.G.find(x=>x.t===t);if(!g)return;const [lo,hi]=HOLE[t],nom=+((lo+hi)/2).toFixed(4),ix=new Set(g.d),rs=new Set();
 g.d.forEach(i=>{const d=P.dims[i];d.nom=nom;d.lo=lo;d.hi=hi;rs.add(d.r)});P.CD.forEach(c=>{if(rs.has(c.r)){c.nom=nom;c.lo=lo;c.hi=hi}});P.CH.forEach(c=>{if(c.t===t){c.nom=nom;c.lo=lo;c.hi=hi}});
 P.S.forEach(s=>{const ng=s[5].filter(i=>!ix.has(i));g.d.forEach(i=>{const v=s[6][i];if(v!=null&&(v<lo-1e-9||v>hi+1e-9))ng.push(i)});ng.sort((a,b)=>a-b);s[5]=ng;s[3]=ng.length?0:1})})}
-/* Thu hẹp spec thêm 0.03 mỗi phía (một phía: chỉ cận trên) cho các spec chưa được bóp dung sai; bỏ qua Ø5.6, Ø6 (đã đặt spec quản lý) và lỗ Ø7 CTP (spec quản lý <0.1). Idempotent: nhớ cận đã thu hẹp trong .sv */
-const SHR=0.03,SHR_SKIP=['Kích thước Ø5.6','Kích thước Ø6','Vị trí lỗ Ø7 (20-x) · spec quản lý <0.1'];
+/* Thu hẹp spec: dải dung sai >=0.4 thu 30%, <0.4 thu 20% (chia đều 2 phía; một phía chỉ cận trên) cho các spec chưa được bóp dung sai; bỏ qua Ø5.6, Ø6 (đã đặt spec quản lý) và lỗ Ø7 CTP (spec quản lý <0.1). Idempotent: nhớ cận đã thu hẹp trong .sv */
+const SHR_SKIP=['Kích thước Ø5.6','Kích thước Ø6','Vị trí lỗ Ø7 (20-x) · spec quản lý <0.1'];
 function fixShrink(P){const shr=o=>{if(!o||typeof o.lo!='number'||typeof o.hi!='number')return;if(o.sv&&Math.abs(o.lo-o.sv[0])<1e-9&&Math.abs(o.hi-o.sv[1])<1e-9)return;
-const one=o.lo===0&&o.nom===0;let lo=o.lo,hi=+(o.hi-SHR).toFixed(4);if(!one)lo=+(o.lo+SHR).toFixed(4);if(hi<=lo)return;o.lo=lo;o.hi=hi;o.sv=[lo,hi]},aff=new Set(),rs=new Set();
+const one=o.lo===0&&o.nom===0,w=o.hi-o.lo,t=one?w:w/2,pc=t<0.1-1e-9?0.3:t<0.2-1e-9?0.4:0.5;let lo=o.lo,hi=+(o.hi-(one?w*pc:w*pc/2)).toFixed(4);if(!one)lo=+(o.lo+w*pc/2).toFixed(4);if(hi<=lo)return;o.lo=lo;o.hi=hi;o.sv=[lo,hi]},aff=new Set(),rs=new Set();
 P.G.forEach(g=>{if(SHR_SKIP.includes(g.t)||g.x)return;g.d.forEach(i=>{aff.add(i);if(P.dims[i]){shr(P.dims[i]);rs.add(P.dims[i].r)}})});
 P.CD.forEach(c=>{if(rs.has(c.r))shr(c)});P.CH.forEach(c=>{if(SHR_SKIP.includes(c.t)||c.x)return;if(P.G.some(g=>g.t===c.t))shr(c)});
 if(!aff.size)return;P.S.forEach(s=>{const ng=s[5].filter(i=>!aff.has(i));aff.forEach(i=>{const v=s[6][i],d=P.dims[i];if(v!=null&&d&&(v<d.lo-1e-9||v>d.hi+1e-9))ng.push(i)});ng.sort((a,b)=>a-b);s[5]=ng;s[3]=ng.length?0:1})}
@@ -836,7 +836,7 @@ function setP(k){st.p=k;st.mi=0;Object.keys(tv).forEach(x=>delete tv[x]);documen
 $('h1').textContent='Data CMM';document.title='Data CMM';
 setGen();
 $('cg').innerHTML=DATA.CH.map((c,i)=>`<div class="card${c.s.length>=6?' big':''}${/Ø/.test(c.t)?' hole':''}" style="--n:${c.s.length}"><h2 class="hb"><span>${c.t}</span><button class="vb" data-i="${i}" title="Chuyển biểu đồ / dữ liệu">▤</button></h2><div class="cv"><canvas id="ch${i}"></canvas></div><div class="tb" style="display:none"></div></div>`).join('');render();ust()}
-$('note').textContent=ALL.note+' · Phiên bản trang: V14-19/11 (đầu trang gọn: 4 khung model 1 hàng, máy vừa nhập thu gọn có mũi tên)';
+$('note').textContent=ALL.note+' · Phiên bản trang: V16-22/11 (bóp spec: dung sai <0.1 thu 30%, 0.1~0.2 thu 40%, ≥0.2 thu 50%)';
 matchMedia('(prefers-color-scheme:dark)').onchange=render;
 let rw=innerWidth,rt;addEventListener('resize',()=>{if(innerWidth===rw)return;rw=innerWidth;clearTimeout(rt);rt=setTimeout(()=>{if(st.v!='data')render()},150)});
 const dz={x:0,y:0,s:1,f:1,ptr:new Map(),d0:0};
