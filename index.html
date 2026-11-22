@@ -635,10 +635,10 @@ g.d.forEach(i=>{const d=P.dims[i];d.nom=nom;d.lo=lo;d.hi=hi;rs.add(d.r)});P.CD.f
 P.S.forEach(s=>{const ng=s[5].filter(i=>!ix.has(i));g.d.forEach(i=>{const v=s[6][i];if(v!=null&&(v<lo-1e-9||v>hi+1e-9))ng.push(i)});ng.sort((a,b)=>a-b);s[5]=ng;s[3]=ng.length?0:1})})}
 /* Thu hẹp spec: dải dung sai >=0.4 thu 30%, <0.4 thu 20% (chia đều 2 phía; một phía chỉ cận trên) cho các spec chưa được bóp dung sai; bỏ qua Ø5.6, Ø6 (đã đặt spec quản lý) và lỗ Ø7 CTP (spec quản lý <0.1). Idempotent: nhớ cận đã thu hẹp trong .sv */
 const SHR_SKIP=['Kích thước Ø5.6','Kích thước Ø6','Vị trí lỗ Ø7 (20-x) · spec quản lý <0.1'];
-function fixShrink(P){const shr=o=>{if(!o||typeof o.lo!='number'||typeof o.hi!='number')return;if(o.sv&&Math.abs(o.lo-o.sv[0])<1e-9&&Math.abs(o.hi-o.sv[1])<1e-9)return;
-const one=o.lo===0&&o.nom===0,w=o.hi-o.lo,t=one?w:w/2,pc=t<0.1-1e-9?0.3:t<0.2-1e-9?0.4:0.5;let lo=o.lo,hi=+(o.hi-(one?w*pc:w*pc/2)).toFixed(4);if(!one)lo=+(o.lo+w*pc/2).toFixed(4);if(hi<=lo)return;o.lo=lo;o.hi=hi;o.sv=[lo,hi]},aff=new Set(),rs=new Set();
-P.G.forEach(g=>{if(SHR_SKIP.includes(g.t)||g.x)return;g.d.forEach(i=>{aff.add(i);if(P.dims[i]){shr(P.dims[i]);rs.add(P.dims[i].r)}})});
-P.CD.forEach(c=>{if(rs.has(c.r))shr(c)});P.CH.forEach(c=>{if(SHR_SKIP.includes(c.t)||c.x)return;if(P.G.some(g=>g.t===c.t))shr(c)});
+function fixShrink(P){const B=(typeof BL!='undefined'&&BL[P.label])||{},rf=(a,i)=>B[a]&&B[a][i],shr=(o,ref)=>{if(!o||typeof o.lo!='number'||typeof o.hi!='number')return;let L=o.lo,H=o.hi;if(o.sv&&Math.abs(L-o.sv[0])<1e-9&&Math.abs(H-o.sv[1])<1e-9){if(o.ov){L=o.ov[0];H=o.ov[1]}else if(ref&&ref[0]!=null){L=ref[0];H=ref[1]}else return}
+const one=L===0&&o.nom===0,w=H-L,t=one?w:w/2,pc=t<0.1-1e-9?0.3:t<0.2-1e-9?0.4:0.5;let lo=L,hi=+(H-(one?w*pc:w*pc/2)).toFixed(4);if(!one)lo=+(L+w*pc/2).toFixed(4);if(hi<=lo)return;o.ov=[L,H];o.lo=lo;o.hi=hi;o.sv=[lo,hi]},aff=new Set(),rs=new Set();
+P.G.forEach(g=>{if(SHR_SKIP.includes(g.t)||g.x)return;g.d.forEach(i=>{aff.add(i);if(P.dims[i]){shr(P.dims[i],rf('dims',i));rs.add(P.dims[i].r)}})});
+P.CD.forEach((c,i)=>{if(rs.has(c.r))shr(c,rf('CD',i))});P.CH.forEach((c,i)=>{if(SHR_SKIP.includes(c.t)||c.x)return;if(P.G.some(g=>g.t===c.t))shr(c,rf('CH',i))});
 if(!aff.size)return;P.S.forEach(s=>{const ng=s[5].filter(i=>!aff.has(i));aff.forEach(i=>{const v=s[6][i],d=P.dims[i];if(v!=null&&d&&(v<d.lo-1e-9||v>d.hi+1e-9))ng.push(i)});ng.sort((a,b)=>a-b);s[5]=ng;s[3]=ng.length?0:1})}
 function fixAll(P){fixPos(P);fixHole(P);fixShrink(P);fixInfo(P);fixNom(P);fixTight(P);fixHide(P)}
 /* Tách tên máy: bỏ đuôi L1/L2, đuôi ST/CT trả riêng (đưa vào mục Ca), tự khớp với các máy đã có */
@@ -739,6 +739,7 @@ try{localStorage.removeItem('j1pa_fs_done');localStorage.removeItem(ULK());local
 LAST=null;setP(st.p);if(typeof ust=='function')ust();render();
 $('us').innerHTML='🗑 Đã xóa toàn bộ dữ liệu ('+tot+' mẫu). Danh sách file đã đọc cũng được xóa — bấm <b>🔄 Quét ngay</b> hoặc chọn file để nạp dữ liệu mới.'+(fail?' <b class="ng">(không lưu được trên thiết bị)</b>':'')};
 const BASEK={};for(const k in ALL.P){BASEK[k]=new Set(ALL.P[k].S.map(sk))}
+const BL={};for(const k in ALL.P){const q=ALL.P[k],f=o=>[o.lo,o.hi];BL[q.label]={dims:q.dims.map(f),CD:q.CD.map(f),CH:q.CH.map(f)}}
 (function(){for(const k in ALL.P){try{const j=localStorage.getItem('j1pa_'+ALL.ver+'_'+k);if(!j)continue;const o=JSON.parse(j);if(o&&o.P&&o.P.S){const P=o.P,h=new Set(),M=[],dl=new Set(P.del||[]);P.S.forEach(s=>s[2]=mn(s[2]));mcFix(P.S,ALL.P[k].S);P.S.concat(P.wipe?[]:ALL.P[k].S.filter(s=>{s[2]=mn(s[2]);return !dl.has(sk(s))})).forEach(s=>{const q=sk(s);if(!h.has(q)){h.add(q);M.push(s)}});P.S=M;P.S.sort(sdate);P.min=P.S.length?P.S[0][0]:'';P.max=P.S.length?P.S[P.S.length-1][0]:'';P._at=o.at;ALL.P[k]=P}}catch(e){}}})();
 
 /* ===== Chỉnh sửa dữ liệu đã up ===== */
@@ -836,7 +837,7 @@ function setP(k){st.p=k;st.mi=0;Object.keys(tv).forEach(x=>delete tv[x]);documen
 $('h1').textContent='Data CMM';document.title='Data CMM';
 setGen();
 $('cg').innerHTML=DATA.CH.map((c,i)=>`<div class="card${c.s.length>=6?' big':''}${/Ø/.test(c.t)?' hole':''}" style="--n:${c.s.length}"><h2 class="hb"><span>${c.t}</span><button class="vb" data-i="${i}" title="Chuyển biểu đồ / dữ liệu">▤</button></h2><div class="cv"><canvas id="ch${i}"></canvas></div><div class="tb" style="display:none"></div></div>`).join('');render();ust()}
-$('note').textContent=ALL.note+' · Phiên bản trang: V16-22/11 (bóp spec: dung sai <0.1 thu 30%, 0.1~0.2 thu 40%, ≥0.2 thu 50%)';
+$('note').textContent=ALL.note+' · Phiên bản trang: V17-22/11 (bóp spec: dung sai <0.1 thu 30%, 0.1~0.2 thu 40%, ≥0.2 thu 50%; sửa lỗi dữ liệu đã lưu không cập nhật spec)';
 matchMedia('(prefers-color-scheme:dark)').onchange=render;
 let rw=innerWidth,rt;addEventListener('resize',()=>{if(innerWidth===rw)return;rw=innerWidth;clearTimeout(rt);rt=setTimeout(()=>{if(st.v!='data')render()},150)});
 const dz={x:0,y:0,s:1,f:1,ptr:new Map(),d0:0};
