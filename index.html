@@ -361,6 +361,11 @@ main{padding:6px 14px 12px}
 .hd3 #gen{display:flex!important;flex-direction:row!important;flex-wrap:wrap;gap:1px 14px!important;align-items:center}.hd3 .u .upl{margin:0!important}.hd3 #fst:empty{display:none!important}
 .cg .tb{max-height:calc(100vh - 300px)}
 }
+
+/* v17b: cả khối cập nhật bên phải thu thành 1 dòng có mũi tên */
+#utg{background:none;border:1px solid var(--bd);border-radius:999px;padding:1px 10px;font:inherit;color:var(--tx);cursor:pointer;text-align:left;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;align-self:flex-start}
+#utg:hover{border-color:var(--ac)}#utg .ng{color:var(--ng,#c0392b)}
+.u:not(.uo)>#gen,.u:not(.uo)>#fst{display:none!important}
 body.sc #upl{display:none!important}
 
 /* v13: đầu trang gọn — 4 khung model cân trên một hàng; “Máy vừa nhập” thu thành 1 dòng có mũi tên */
@@ -664,7 +669,7 @@ R.forEach(r=>{const id=String(r[ci.id]).trim(),a=rv(r[ci.a]),t=ci.t>=0?r[ci.t]:'
 if(/True Position/i.test(t)||m[1]=='11'||m[1]=='13')V['TP '+(m[1]=='11'?'10':'12')+'.'+m[2]]=a;
 else{V[m[1]+'.'+m[2]]=a;if(XY[id]&&ci.x>=0){V['X'+XY[id]]=rv(Math.abs(parseFloat(String(r[ci.x]).trim().replace(',','.'))));V['Y'+XY[id]]=rv(r[ci.y])}}});
 const kn0=d=>k=='ctp'?String(d.n).split(' ')[0]:d.n,g=P.dims.map(d=>V[kn0(d)]!=null?V[kn0(d)]:null),hit=g.filter(v=>v!=null).length;
-if(hit<P.dims.length*.6)throw new Error('chỉ khớp '+hit+'/'+P.dims.length+' kích thước — sai mã hàng?');
+if(hit<P.dims.length*.6)throw Object.assign(new Error('chỉ khớp '+hit+'/'+P.dims.length+' kích thước — sai mã hàng?'),hit<P.dims.length*.4?{quiet:1}:{});
 const cd=P.CD.map(c=>V[kn0(c)]!=null?V[kn0(c)]:null),ng=[];
 g.forEach((v,i)=>{const d=P.dims[i];if(v!=null&&(v<d.lo-1e-9||v>d.hi+1e-9))ng.push(i)});
 const kn=uniq(ALL.P[k].S.map(s=>s[2])),rm=findMc([R[0][ci.m],f.name],kn),um=$('um').value.trim(),mc=um?mcFor(k,um):rm.mc?mcFor(k,rm.mc):'',B=Date.now();if(!mc)throw new Error('không nhận ra số máy — nhập số máy vào ô “Máy” rồi chọn lại file');
@@ -685,7 +690,7 @@ const k0=[['chọn',$('uk').value],['tên file',pcdKey(pn)||pcdKey(f.name)],['th
 const k=k0[1];KSRC=k0[0];if(!ALL.P[k])throw new Error('chưa có mã hàng '+k);
 const V={};for(let r=r0+1;r<=rg.e.r;r++){const n=pcdNorm(cl(r,cA));if(!n||n in V)continue;const v=rv(cl(r,cM));if(v!=null)V[n]=v}
 const P=JSON.parse(JSON.stringify(ALL.P[k])),g=P.dims.map(d=>V[pcdNorm(d.n)]!=null?V[pcdNorm(d.n)]:null),hit=g.filter(v=>v!=null).length;
-if(hit<P.dims.length*.6)throw new Error('chỉ khớp '+hit+'/'+P.dims.length+' kích thước — sai mã hàng?');
+if(hit<P.dims.length*.6)throw Object.assign(new Error('chỉ khớp '+hit+'/'+P.dims.length+' kích thước — sai mã hàng?'),hit<P.dims.length*.4?{quiet:1}:{});
 const cd=P.CD.map((c,i)=>g[i]==null?null:(c.o!=null?rv(g[i]-c.o):g[i])),ng=[];
 g.forEach((v,i)=>{const d=P.dims[i];if(v!=null&&(v<d.lo-1e-9||v>d.hi+1e-9))ng.push(i)});
 const fn=String(f.name||'').match(/[-_ ](\d{1,2})[-_ ](\d{1,3})\.[a-z]+$/i),fm=fn?(+fn[1])+'-'+(+fn[2]):'',um=$('um').value.trim(),mc=um?mcFor(k,um):fm?mcFor(k,fm):'CMM',B=Date.now(),dt=new Date(f.lastModified||Date.now()),p2=n=>String(n).padStart(2,'0'),
@@ -837,7 +842,7 @@ function setP(k){st.p=k;st.mi=0;Object.keys(tv).forEach(x=>delete tv[x]);documen
 $('h1').textContent='Data CMM';document.title='Data CMM';
 setGen();
 $('cg').innerHTML=DATA.CH.map((c,i)=>`<div class="card${c.s.length>=6?' big':''}${/Ø/.test(c.t)?' hole':''}" style="--n:${c.s.length}"><h2 class="hb"><span>${c.t}</span><button class="vb" data-i="${i}" title="Chuyển biểu đồ / dữ liệu">▤</button></h2><div class="cv"><canvas id="ch${i}"></canvas></div><div class="tb" style="display:none"></div></div>`).join('');render();ust()}
-$('note').textContent=ALL.note+' · Phiên bản trang: V17-22/11 (bóp spec: dung sai <0.1 thu 30%, 0.1~0.2 thu 40%, ≥0.2 thu 50%; sửa lỗi dữ liệu đã lưu không cập nhật spec)';
+$('note').textContent=ALL.note+' · Phiên bản trang: V19-25/11 (file model khác trong thư mục chung không tính là lỗi; khối cập nhật thu thành 1 dòng; bóp spec: dung sai <0.1 thu 30%, 0.1~0.2 thu 40%, ≥0.2 thu 50%; sửa lỗi dữ liệu đã lưu không cập nhật spec)';
 matchMedia('(prefers-color-scheme:dark)').onchange=render;
 let rw=innerWidth,rt;addEventListener('resize',()=>{if(innerWidth===rw)return;rw=innerWidth;clearTimeout(rt);rt=setTimeout(()=>{if(st.v!='data')render()},150)});
 const dz={x:0,y:0,s:1,f:1,ptr:new Map(),d0:0};
@@ -934,4 +939,12 @@ ui()})();
 </script>
 <script>(function(){const f=()=>document.body.classList.toggle('sc',scrollY>80);addEventListener('scroll',f,{passive:true});f();setInterval(()=>{try{updMs()}catch(e){}},60000)})();</script>
 <script>document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('#upl .umt');if(!b)return;window.__uplOpen=!window.__uplOpen;try{updMs()}catch(x){}});</script>
+<script>(function(){function tg(){var u=document.querySelector('.u');if(!u)return;var b=document.getElementById('utg');if(!b){b=document.createElement('button');b.type='button';b.id='utg';u.insertBefore(b,u.firstChild)}
+var a=[],L=null;try{a=uaGet();L=a[0]}catch(e){}var t='Chưa có lần nhập';if(L){var nm={},ks=Object.keys(L.mc||{});try{nm=uaNg(L,a[1]?a[1].t:0)}catch(e){}var nN=ks.filter(function(k){return nm[k]}).length,fresh=Date.now()-L.t<=UPL_MS;
+t='Nhập <b>'+uaTm(L.t)+'</b>'+(fresh?' · '+ks.length+' máy'+(nN?' · <b class="ng">'+nN+' NG</b>':''):'')+(L.err?' · <span class="ng">'+L.err+' lỗi</span>':'')}
+b.innerHTML=(u.classList.contains('uo')?'▾ ':'▸ ')+t;b.title='Bấm để '+(u.classList.contains('uo')?'thu nhỏ':'xem chi tiết cập nhật')}
+document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#utg');if(!b)return;var u=document.querySelector('.u');u.classList.toggle('uo');if(u.classList.contains('uo'))window.__uplOpen=true;try{updMs()}catch(x){}tg()});
+addEventListener('scroll',function(){var u=document.querySelector('.u');if(u&&u.classList.contains('uo')&&scrollY>80){u.classList.remove('uo');tg()}},{passive:true});
+var g0=window.gset,u0=window.updMs;window.gset=function(){g0.apply(this,arguments);tg()};window.updMs=function(){u0.apply(this,arguments);tg()};
+try{setGen()}catch(e){tg()}})();</script>
 </body></html>
